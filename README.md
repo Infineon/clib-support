@@ -63,7 +63,7 @@ When building with IAR, the '--threaded_lib' argument must also be provided when
     * __cxa_guard_release
 
 ## More information
-* [Cypress Semiconductor](http://www.cypress.com)
+* [Cypress Semiconductor, an Infineon Technologies Company](http://www.cypress.com)
 * [Cypress Semiconductor GitHub](https://github.com/cypresssemiconductorco)
 * [ModusToolbox](https://www.cypress.com/products/modustoolbox-software-environment)
 

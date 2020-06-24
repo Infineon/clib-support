@@ -8,6 +8,8 @@ The CLib FreeRTOS Support Library provides the necessary hooks to make C library
 * Thread safety hooks for C++
 
 ### What Changed?
+#### v1.0.1
+* Minor update for documentation & branding
 #### v1.0.0
 * Initial release
 
@@ -24,7 +26,7 @@ This version of the CLib FreeRTOS Support Library was validated for compatibilit
 
 ### More information
 Use the following links for more information, as needed:
-* [Cypress Semiconductor](http://www.cypress.com)
+* [Cypress Semiconductor, an Infineon Technologies Company](http://www.cypress.com)
 * [Cypress Semiconductor GitHub](https://github.com/cypresssemiconductorco)
 * [ModusToolbox](https://www.cypress.com/products/modustoolbox-software-environment)
 

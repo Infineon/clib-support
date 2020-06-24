@@ -23,7 +23,7 @@ for the JavaScript code in this file
 */
 var NAVTREE =
 [
-  [ "lib (clib-support)", "index.html", [
+  [ "CLib FreeRTOS Support (clib-support)", "index.html", [
     [ "CLib FreeRTOS Support", "index.html", null ]
   ] ]
 ];

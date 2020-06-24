@@ -63,6 +63,7 @@ caddr_t _sbrk(uint32_t incr)
 
 void __malloc_lock(struct _reent *reent)
 {
+    (void)reent;
 #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
     cy_mutex_pool_acquire(cy_malloc_mutex);
 #else
@@ -72,6 +73,7 @@ void __malloc_lock(struct _reent *reent)
 
 void __malloc_unlock(struct _reent *reent)
 {
+    (void)reent;
 #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
     cy_mutex_pool_release(cy_malloc_mutex);
 #else
@@ -81,6 +83,7 @@ void __malloc_unlock(struct _reent *reent)
 
 void __env_lock(struct _reent *reent)
 {
+    (void)reent;
 #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
     cy_mutex_pool_acquire(cy_env_mutex);
 #else
@@ -90,6 +93,7 @@ void __env_lock(struct _reent *reent)
 
 void __env_unlock(struct _reent *reent)
 {
+    (void)reent;
 #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
     cy_mutex_pool_release(cy_env_mutex);
 #else

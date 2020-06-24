@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>lib (clib-support)</title>
+<title>CLib FreeRTOS Support (clib-support)</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -29,9 +29,9 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr style="height: 56px;">
-  <td id="projectlogo"><a href="http://www.cypress.com/"><img alt="Logo" src="cypress_logo.png"/></a></td>
+  <td id="projectlogo"><a href="http://www.cypress.com/"><img alt="Logo" src="logo.png"/></a></td>
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">lib (clib-support)</div>
+   <div id="projectname">CLib FreeRTOS Support (clib-support)</div>
   </td>
  </tr>
  </tbody>
@@ -91,7 +91,11 @@ $(document).ready(function(){initNavTree('index.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h2>Overview</h2>
-<p>The CLib FreeRTOS Support Library provides the necessary hooks to make C library functions such as malloc and free thread safe. This implementation is specific to FreeRTOS and requires it to be present to build. For details on what this library provides see the toolchain specific documentation at: ARM: <a href="https://developer.arm.com/docs/100073/0614/the-arm-c-and-c-libraries/multithreaded-support-in-arm-c-libraries/management-of-locks-in-multithreaded-applications">https://developer.arm.com/docs/100073/0614/the-arm-c-and-c-libraries/multithreaded-support-in-arm-c-libraries/management-of-locks-in-multithreaded-applications</a> GCC: <a href="https://sourceware.org/newlib/libc.html#g_t_005f_005fmalloc_005flock">https://sourceware.org/newlib/libc.html#g_t_005f_005fmalloc_005flock</a> IAR: <a href="http://supp.iar.com/filespublic/updinfo/011261/arm/doc/EWARM_DevelopmentGuide.ENU.pdf">http://supp.iar.com/filespublic/updinfo/011261/arm/doc/EWARM_DevelopmentGuide.ENU.pdf</a></p>
+<p>The CLib FreeRTOS Support Library provides the necessary hooks to make C library functions such as malloc and free thread safe. This implementation is specific to FreeRTOS and requires it to be present to build. For details on what this library provides see the toolchain specific documentation at:</p><ul>
+<li>ARM: <a href="https://developer.arm.com/docs/100073/0614/the-arm-c-and-c-libraries/multithreaded-support-in-arm-c-libraries/management-of-locks-in-multithreaded-applications">https://developer.arm.com/docs/100073/0614/the-arm-c-and-c-libraries/multithreaded-support-in-arm-c-libraries/management-of-locks-in-multithreaded-applications</a></li>
+<li>GCC: <a href="https://sourceware.org/newlib/libc.html#g_t_005f_005fmalloc_005flock">https://sourceware.org/newlib/libc.html#g_t_005f_005fmalloc_005flock</a></li>
+<li>IAR: <a href="http://supp.iar.com/filespublic/updinfo/011261/arm/doc/EWARM_DevelopmentGuide.ENU.pdf">http://supp.iar.com/filespublic/updinfo/011261/arm/doc/EWARM_DevelopmentGuide.ENU.pdf</a></li>
+</ul>
 <p>The startup code must call cy_toolchain_init (for GCC and IAR). This must occur after static data initialization and before static constructors. This is done automatically for PSoC devices. See the PSoC startup files for an example.</p>
 <p>To enable Thread Local Storage, configUSE_NEWLIB_REENTRANT must be enabled.</p>
 <p>While this is specific to FreeRTOS, it can be used as a basis for supporting other RTOSes as well.</p>
@@ -154,8 +158,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 </ul>
 <h2>More information</h2>
 <ul>
-<li><a href="https://cypresssemiconductorco.github.io/core-lib/html/modules.html">API Reference Guide</a></li>
-<li><a href="http://www.cypress.com">Cypress Semiconductor</a></li>
+<li><a href="http://www.cypress.com">Cypress Semiconductor, an Infineon Technologies Company</a></li>
 <li><a href="https://github.com/cypresssemiconductorco">Cypress Semiconductor GitHub</a></li>
 <li><a href="https://www.cypress.com/products/modustoolbox-software-environment">ModusToolbox</a> <hr/>
  © Cypress Semiconductor Corporation, 2020. </li>
@@ -166,7 +169,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <div id="nav-path" class="navpath">
     <ul>
         <li class="footer">
-            Generated for <b>lib (clib-support)</b> by <b>Cypress Semiconductor Corporation</b>.
+            Generated for <b>CLib FreeRTOS Support (clib-support)</b> by <b>Cypress Semiconductor Corporation</b>.
             All rights reserved.
         </li>
     </ul>
