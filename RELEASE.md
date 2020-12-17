@@ -8,6 +8,8 @@ The CLib FreeRTOS Support Library provides the necessary hooks to make C library
 * Thread safety hooks for C++
 
 ### What Changed?
+#### v1.0.2
+* Minor update to work with a wider range of MCUs
 #### v1.0.1
 * Minor update for documentation & branding
 #### v1.0.0
@@ -18,11 +20,12 @@ This version of the CLib FreeRTOS Support Library was validated for compatibilit
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 2.0     |
-| GCC Compiler                              | 7.4     |
-| IAR Compiler                              | 8.32    |
+| ModusToolbox Software Environment         | 2.1     |
+| GCC Compiler                              | 9.2     |
+| IAR Compiler                              | 8.4     |
 | ARM Compiler                              | 6.11    |
 
+Minimum required ModusToolbox Software Environment: v2.0
 
 ### More information
 Use the following links for more information, as needed:
