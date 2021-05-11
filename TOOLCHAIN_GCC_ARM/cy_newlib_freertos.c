@@ -43,7 +43,9 @@
 
 #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
 static SemaphoreHandle_t cy_malloc_mutex = NULL, cy_env_mutex = NULL, cy_ctor_mutex = NULL;
+SemaphoreHandle_t cy_timer_mutex;
 #endif
+
 
 //--------------------------------------------------------------------------------------------------
 // cy_toolchain_init
@@ -54,6 +56,7 @@ void cy_toolchain_init(void)
     cy_malloc_mutex = cy_mutex_pool_create();
     cy_env_mutex    = cy_mutex_pool_create();
     cy_ctor_mutex   = cy_mutex_pool_create();
+    cy_timer_mutex  = cy_mutex_pool_create();
     #endif
 }
 

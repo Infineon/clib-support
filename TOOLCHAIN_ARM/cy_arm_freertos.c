@@ -43,6 +43,7 @@ __asm(".global __use_no_semihosting\n\t");
 
 #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
 SemaphoreHandle_t cy_ctor_mutex;
+SemaphoreHandle_t cy_timer_mutex;
 #endif
 
 //--------------------------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ void _platform_post_stackheap_init(void)
 {
     #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
     cy_ctor_mutex = cy_mutex_pool_create();
+    cy_timer_mutex = cy_mutex_pool_create();
     #endif
 }
 

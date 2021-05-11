@@ -47,6 +47,11 @@
 struct _reent  cy_iar_global_impure = { __section_begin("__iar_tls$$DATA") };
 struct _reent* _impure_ptr          = &cy_iar_global_impure;
 
+#if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+SemaphoreHandle_t cy_timer_mutex;
+#endif
+
+
 //--------------------------------------------------------------------------------------------------
 // __aeabi_read_tp
 //--------------------------------------------------------------------------------------------------
@@ -100,6 +105,7 @@ void cy_toolchain_init(void)
     extern void __iar_Initlocks(void);
     #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
     cy_mutex_pool_setup();
+    cy_timer_mutex   = cy_mutex_pool_create();
     #endif
     __iar_Initlocks();
 }

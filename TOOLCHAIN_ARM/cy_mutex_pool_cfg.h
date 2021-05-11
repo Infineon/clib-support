@@ -26,4 +26,4 @@
 
 #include <stdio.h>
 
-#define CY_STATIC_MUTEX_MAX (5 + (FOPEN_MAX))
+#define CY_STATIC_MUTEX_MAX (6 + (FOPEN_MAX))

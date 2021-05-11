@@ -29,7 +29,7 @@
 #include <DLib_Threads.h>
 
 #if defined(FOPEN_MAX)
-#define CY_STATIC_MUTEX_MAX ((_MAX_LOCK)+(FOPEN_MAX))
+#define CY_STATIC_MUTEX_MAX ((_MAX_LOCK)+(FOPEN_MAX)+1)
 #else
-#define CY_STATIC_MUTEX_MAX (_MAX_LOCK)
+#define CY_STATIC_MUTEX_MAX (_MAX_LOCK+1)
 #endif

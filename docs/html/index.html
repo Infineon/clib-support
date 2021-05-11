@@ -155,13 +155,33 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>__cxa_guard_release</li>
 </ul>
 </li>
+<li>time function implementation from time.h</li>
 </ul>
+<h3>Time Support Details</h3>
+<p>When using the HAL (CY_USING_HAL defined) the <b>time</b> function returns the time in seconds from microcontroller Real-Time Clock (RTC). Additionally, functions <b>cy_set_rtc_instance</b> and <b>cy_get_rtc_instance</b> are provided to interact with the RTC instance used. There are two ways to set this up.</p><ol type="1">
+<li>Setup using an existing RTC instance:<ul>
+<li>Application initializes RTC using <b>cyhal_rtc_init</b> API</li>
+<li>Application writes the current time to RTC using <b>cyhal_rtc_write</b> API</li>
+<li>Application sets the RTC instance using <b>cy_set_rtc_instance</b> API</li>
+<li>Application calls <b>time</b> function to get the time from RTC</li>
+</ul>
+</li>
+<li>Allow time to initialize the RTC instance:<ul>
+<li>Application calls <b>time</b> function to get the time from RTC. The time function will initializes RTC</li>
+<li>Application can get the RTC instance using <b>cy_get_rtc_instance</b> API</li>
+<li>Application can write the current time to RTC using <b>cyhal_rtc_write</b> API</li>
+</ul>
+</li>
+</ol>
+<p>NOTE: In either flow, until the application calls <b>cyhal_rtc_write</b> the RTC will only be initialized with a default time. This means that time deltas will be accurate, but absolute times will not have any relation to the real time.</p>
 <h2>More information</h2>
-<ul>
+<p>Use the following links for more information, as needed:</p><ul>
+<li><a href="https://cypresssemiconductorco.github.io/clib-support/html/index.html">Reference Guide</a></li>
 <li><a href="http://www.cypress.com">Cypress Semiconductor, an Infineon Technologies Company</a></li>
 <li><a href="https://github.com/cypresssemiconductorco">Cypress Semiconductor GitHub</a></li>
-<li><a href="https://www.cypress.com/products/modustoolbox-software-environment">ModusToolbox</a> <hr/>
- © Cypress Semiconductor Corporation, 2020. </li>
+<li><a href="https://www.cypress.com/products/modustoolbox-software-environment">ModusToolbox</a></li>
+<li><a href="https://github.com/cypresssemiconductorco/mtb-hal-cat1/blob/master/include/cyhal_rtc.h">RTC APIs</a> <hr/>
+ © Cypress Semiconductor Corporation, 2020-2021. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
