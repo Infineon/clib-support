@@ -1,12 +1,14 @@
 /***********************************************************************************************//**
- * \file cy_newlib_freertos.c
+ * \file cy_clib_support_newlib.c
  *
  * \brief
- * Newlib port for FreeRTOS
+ * Newlib port for clib-support library
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2018-2019 Cypress Semiconductor Corporation
+ * Copyright 2018-2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,28 +24,26 @@
  * limitations under the License.
  **************************************************************************************************/
 
-#include <errno.h>
 #include <malloc.h>
 #include <stdatomic.h>
 #include <stdint.h>
+#include <sys/errno.h>
 #include <sys/types.h>
+#include <sys/unistd.h>
 #include <envlock.h>
-#include <FreeRTOS.h>
-#include <semphr.h>
-#include <task.h>
 #include <cmsis_compiler.h>
 #include "cy_mutex_pool.h"
 
-#if configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 || \
-    configSUPPORT_STATIC_ALLOCATION == 0
+#if defined(COMPONENT_FREERTOS) && ((configUSE_MUTEXES == 0) || \
+    (configUSE_RECURSIVE_MUTEXES == 0) || (configSUPPORT_STATIC_ALLOCATION == 0))
 #warning \
     configUSE_MUTEXES, configUSE_RECURSIVE_MUTEXES, and configSUPPORT_STATIC_ALLOCATION must be enabled and set to 1 to use clib-support
 
 #else
 
-#if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-static SemaphoreHandle_t cy_malloc_mutex = NULL, cy_env_mutex = NULL, cy_ctor_mutex = NULL;
-SemaphoreHandle_t cy_timer_mutex;
+#if defined(MUTEX_POOL_AVAILABLE)
+static cy_mutex_pool_semaphore_t cy_malloc_mutex = NULL, cy_env_mutex = NULL, cy_ctor_mutex = NULL;
+cy_mutex_pool_semaphore_t cy_timer_mutex;
 #endif
 
 
@@ -52,7 +52,7 @@ SemaphoreHandle_t cy_timer_mutex;
 //--------------------------------------------------------------------------------------------------
 void cy_toolchain_init(void)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_malloc_mutex = cy_mutex_pool_create();
     cy_env_mutex    = cy_mutex_pool_create();
     cy_ctor_mutex   = cy_mutex_pool_create();
@@ -61,17 +61,17 @@ void cy_toolchain_init(void)
 }
 
 
-// XMC Lib already defines this so, don't redefine for those devices
+// XMC™ Lib already defines this so, don't redefine for those devices
 #if !defined(COMPONENT_CAT3)
 //--------------------------------------------------------------------------------------------------
 // _sbrk
 //--------------------------------------------------------------------------------------------------
-caddr_t _sbrk(uint32_t incr)
+caddr_t _sbrk(int incr)
 {
     extern uint8_t  __HeapBase, __HeapLimit;
     static uint8_t* heapBrk = &__HeapBase;
     uint8_t*        prevBrk = heapBrk;
-    if (incr > (uint32_t)(&__HeapLimit - heapBrk))
+    if (incr > (int)(&__HeapLimit - heapBrk))
     {
         errno = ENOMEM;
         return (caddr_t)-1;
@@ -90,10 +90,10 @@ caddr_t _sbrk(uint32_t incr)
 void __malloc_lock(struct _reent* reent)
 {
     (void)reent;
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_acquire(cy_malloc_mutex);
     #else
-    vTaskSuspendAll();
+    cy_mutex_pool_suspend_threads();
     #endif
 }
 
@@ -104,10 +104,10 @@ void __malloc_lock(struct _reent* reent)
 void __malloc_unlock(struct _reent* reent)
 {
     (void)reent;
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_release(cy_malloc_mutex);
     #else
-    xTaskResumeAll();
+    cy_mutex_pool_resume_threads();
     #endif
 }
 
@@ -118,10 +118,10 @@ void __malloc_unlock(struct _reent* reent)
 void __env_lock(struct _reent* reent)
 {
     (void)reent;
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_acquire(cy_env_mutex);
     #else
-    vTaskSuspendAll();
+    cy_mutex_pool_suspend_threads();
     #endif
 }
 
@@ -132,10 +132,10 @@ void __env_lock(struct _reent* reent)
 void __env_unlock(struct _reent* reent)
 {
     (void)reent;
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_release(cy_env_mutex);
     #else
-    xTaskResumeAll();
+    cy_mutex_pool_resume_threads();
     #endif
 }
 
@@ -154,15 +154,15 @@ typedef struct
 //--------------------------------------------------------------------------------------------------
 // __cxa_guard_acquire
 //--------------------------------------------------------------------------------------------------
-int __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
+int16_t __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
 {
-    int acquired = 0;
+    int16_t acquired = 0;
     if (0 == atomic_load(&guard_object->initialized))
     {
-        #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+        #if defined(MUTEX_POOL_AVAILABLE)
         cy_mutex_pool_acquire(cy_ctor_mutex);
         #else
-        vTaskSuspendAll();
+        cy_mutex_pool_suspend_threads();
         #endif
         if (0 == atomic_load(&guard_object->initialized))
         {
@@ -177,10 +177,10 @@ int __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
         }
         else
         {
-            #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+            #if defined(MUTEX_POOL_AVAILABLE)
             cy_mutex_pool_release(cy_ctor_mutex);
             #else
-            xTaskResumeAll();
+            cy_mutex_pool_resume_threads();
             #endif
         }
     }
@@ -196,10 +196,10 @@ void __cxa_guard_abort(cy_cxa_guard_object_t* guard_object)
     if (guard_object->acquired)
     {
         guard_object->acquired = 0;
-        #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+        #if defined(MUTEX_POOL_AVAILABLE)
         cy_mutex_pool_release(cy_ctor_mutex);
         #else
-        xTaskResumeAll();
+        cy_mutex_pool_resume_threads();
         #endif
     }
     #ifndef NDEBUG
@@ -221,5 +221,6 @@ void __cxa_guard_release(cy_cxa_guard_object_t* guard_object)
 }
 
 
-#endif // if configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 ||
-// configSUPPORT_STATIC_ALLOCATION == 0
+#endif \
+    // defined(COMPONENT_FREERTOS) && (configUSE_MUTEXES == 0 ||
+    //     configUSE_RECURSIVE_MUTEXES == 0 || configSUPPORT_STATIC_ALLOCATION == 0)

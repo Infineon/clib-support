@@ -7,7 +7,9 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2021 Cypress Semiconductor Corporation
+ * Copyright 2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +50,7 @@ void cy_set_rtc_instance(cyhal_rtc_t* rtc_instance);
  *
  * @return  Pointer to cyhal_rtc_t instance
  */
-cyhal_rtc_t* cy_get_rtc_instance();
+cyhal_rtc_t* cy_get_rtc_instance(void);
 
 #ifdef __cplusplus
 }

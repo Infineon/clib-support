@@ -1,12 +1,14 @@
 /***********************************************************************************************//**
- * \file cy_mutex_pool.c
+ * \file COMPONENT_THREADX/cy_mutex_pool.c
  *
  * \brief
- * Mutex pool implementation for FreeRTOS
+ * Mutex pool implementation for ThreadX
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2018-2019 Cypress Semiconductor Corporation
+ * Copyright 2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,12 +24,16 @@
  * limitations under the License.
  **************************************************************************************************/
 
-#include "cy_mutex_pool.h"
-#include "cy_mutex_pool_cfg.h"
-#include <task.h>
 #include <stdbool.h>
 #include <string.h>
 #include <cmsis_compiler.h>
+
+#include "cy_mutex_pool.h"
+#include "cy_mutex_pool_cfg.h"
+#include "tx_api.h"
+#include "tx_thread.h"
+#include "tx_mutex.h"
+#include "tx_initialize.h"
 
 // The standard library requires mutexes in order to ensure thread safety for
 // operations such as malloc. The mutexes must be initialized at startup.
@@ -35,36 +41,36 @@
 // is not initialized until later in the startup process (and because the
 // heap requires a mutex). Some of the toolchains require recursive mutexes.
 
-// The mutex functions may be called before vTaskStartScheduler. In this case,
+// The mutex functions may be called before tx_kernel_enter. In this case,
 // the acquire/release functions will do nothing.
 
-#if configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 || \
-    configSUPPORT_STATIC_ALLOCATION == 0
-#warning \
-    configUSE_MUTEXES, configUSE_RECURSIVE_MUTEXES, and configSUPPORT_STATIC_ALLOCATION must be enabled and set to 1 to use clib-support
+// Ensure that TX_DISABLE_REDUNDANT_CLEARING is defined. Otherwise any mutexes
+// which are initialized prior to tx_kernel_enter will be wiped out.
 
-#else
+#ifndef TX_DISABLE_REDUNDANT_CLEARING
+#error TX_DISABLE_REDUNDANT_CLEARING must be defined!
+#endif
 
 //--------------------------------------------------------------------------------------------------
-// cy_freertos_kernel_started
+// cy_threadx_kernel_started
 //--------------------------------------------------------------------------------------------------
-static bool cy_freertos_kernel_started(void)
+static bool cy_threadx_kernel_started(void)
 {
     static bool rtos_started = false;
+
     if (!rtos_started)
     {
-        rtos_started = xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED;
+        rtos_started = TX_THREAD_GET_SYSTEM_STATE() == TX_INITIALIZE_IS_FINISHED;
     }
+
     return rtos_started;
 }
 
 
 // The mutex functions must not be used in interrupt context.
-// The create/destroy functions will not work because taskENTER_CRITICAL will
-// not work in an interrupt.
 // The acquire function is explicitly designed for waiting which is likely to
 // cause a deadlock in an interrupt.
-static void cy_freertos_check_in_isr(void)
+static void cy_threadx_check_in_isr(void)
 {
     if (0 != __get_IPSR())
     {
@@ -84,64 +90,73 @@ static void cy_freertos_check_in_isr(void)
 #   define CY_ATTR_NO_INIT
 #endif
 
-static CY_ATTR_NO_INIT StaticSemaphore_t cy_mutex_pool_storage[CY_STATIC_MUTEX_MAX];
-static CY_ATTR_NO_INIT SemaphoreHandle_t cy_mutex_pool_handle[CY_STATIC_MUTEX_MAX];
+static CY_ATTR_NO_INIT TX_MUTEX cy_mutex_pool_storage[CY_STATIC_MUTEX_MAX];
 
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_setup
 //--------------------------------------------------------------------------------------------------
 void cy_mutex_pool_setup(void)
 {
-    // Only required if the startup code does not initialize cy_mutex_pool_handle
-    memset(cy_mutex_pool_handle, 0, sizeof(cy_mutex_pool_handle));
+    // Only required if the startup code does not initialize cy_mutex_pool_storage
+    memset(cy_mutex_pool_storage, 0, sizeof(cy_mutex_pool_storage));
 }
 
 
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_create
 //--------------------------------------------------------------------------------------------------
-SemaphoreHandle_t cy_mutex_pool_create(void)
+TX_MUTEX* cy_mutex_pool_create(void)
 {
-    cy_freertos_check_in_isr();
-    SemaphoreHandle_t handle = NULL;
-    int               found  = -1;
-    taskENTER_CRITICAL();
+    int found  = -1;
+    UINT old_posture;
+
+    cy_threadx_check_in_isr();
+
+    /*
+     * Find a mutex that hasn't been initialized yet.
+     */
+
+    old_posture = tx_interrupt_control(TX_INT_DISABLE);
     for (int i = 0; i < CY_STATIC_MUTEX_MAX; i++)
     {
-        if (NULL == cy_mutex_pool_handle[i])
+        if (TX_MUTEX_ID != cy_mutex_pool_storage[i].tx_mutex_id)
         {
-            found                       = i;
-            cy_mutex_pool_handle[found] = (SemaphoreHandle_t)1;
+            found = i;
             break;
         }
     }
-    taskEXIT_CRITICAL();
+    tx_interrupt_control(old_posture);
+
     if (found >= 0)
     {
-        handle =
-            xSemaphoreCreateRecursiveMutexStatic(&cy_mutex_pool_storage[found]);
-        cy_mutex_pool_handle[found] = handle;
+        if (tx_mutex_create(&cy_mutex_pool_storage[found], TX_NULL, TX_NO_INHERIT) != TX_SUCCESS)
+        {
+            found = -1;
+        }
     }
-    else
+
+    if (found < 0)
     {
         __BKPT(0);  // Out of resources
     }
-    return handle;
+
+    return &cy_mutex_pool_storage[found];
 }
 
 
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_acquire
 //--------------------------------------------------------------------------------------------------
-void cy_mutex_pool_acquire(SemaphoreHandle_t m)
+void cy_mutex_pool_acquire(TX_MUTEX* m)
 {
-    cy_freertos_check_in_isr();
-    if (cy_freertos_kernel_started())
+    cy_threadx_check_in_isr();
+    if (cy_threadx_kernel_started())
     {
         static const int CY_MUTEX_TIMEOUT_TICKS = 10000;
-        while (xSemaphoreTakeRecursive(m, CY_MUTEX_TIMEOUT_TICKS) != pdTRUE)
+
+        while (tx_mutex_get(m, CY_MUTEX_TIMEOUT_TICKS) != TX_SUCCESS)
         {
-            // Halt here until condition is false
+            // Halt here until condition the operation succeeds
         }
     }
 }
@@ -150,12 +165,12 @@ void cy_mutex_pool_acquire(SemaphoreHandle_t m)
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_release
 //--------------------------------------------------------------------------------------------------
-void cy_mutex_pool_release(SemaphoreHandle_t m)
+void cy_mutex_pool_release(TX_MUTEX* m)
 {
-    cy_freertos_check_in_isr();
-    if (cy_freertos_kernel_started())
+    cy_threadx_check_in_isr();
+    if (cy_threadx_kernel_started())
     {
-        xSemaphoreGiveRecursive(m);
+        tx_mutex_put(m);
     }
 }
 
@@ -163,22 +178,13 @@ void cy_mutex_pool_release(SemaphoreHandle_t m)
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_destroy
 //--------------------------------------------------------------------------------------------------
-void cy_mutex_pool_destroy(SemaphoreHandle_t m)
+void cy_mutex_pool_destroy(TX_MUTEX* m)
 {
-    cy_freertos_check_in_isr();
-    vSemaphoreDelete(m);
-    taskENTER_CRITICAL();
-    for (int i = 0; i < CY_STATIC_MUTEX_MAX; i++)
-    {
-        if (cy_mutex_pool_handle[i] == m)
-        {
-            cy_mutex_pool_handle[i] = NULL;
-            break;
-        }
-    }
-    taskEXIT_CRITICAL();
+    UINT old_posture;
+
+    cy_threadx_check_in_isr();
+
+    old_posture = tx_interrupt_control(TX_INT_DISABLE);
+    tx_mutex_delete(m);
+    tx_interrupt_control(old_posture);
 }
-
-
-#endif // if configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 ||
-// configSUPPORT_STATIC_ALLOCATION == 0

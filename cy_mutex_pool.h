@@ -6,7 +6,9 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2018-2019 Cypress Semiconductor Corporation
+ * Copyright 2018-2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,31 +26,66 @@
 
 #pragma once
 
-#include "FreeRTOS.h"
-#include <semphr.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if defined(COMPONENT_FREERTOS)
+#include "FreeRTOS.h"
+#include <semphr.h>
+#include <task.h>
+
+/** Map cy_mutex_pool_semaphore_t to FreeRTOS specific SemaphoreHandle_t */
+typedef SemaphoreHandle_t cy_mutex_pool_semaphore_t;
+#elif defined(COMPONENT_THREADX)
+#include "tx_api.h"
+
+/** Map cy_mutex_pool_semaphore_t to ThreadX specific TX_MUTEX* */
+typedef TX_MUTEX* cy_mutex_pool_semaphore_t;
+#else // if defined(COMPONENT_FREERTOS)
+#error "Unhandled RTOS type"
+#endif // if defined(COMPONENT_FREERTOS)
+
+#if !defined(COMPONENT_FREERTOS) || (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+#define MUTEX_POOL_AVAILABLE
 
 /** Internal use only. Initializes the mutex pool. */
 void cy_mutex_pool_setup(void);
 
 /** Internal use only. Allocates a recursive mutex. */
-/** \return SemaphoreHandle_t */
-SemaphoreHandle_t cy_mutex_pool_create(void);
+/** \return cy_mutex_pool_semaphore_t */
+cy_mutex_pool_semaphore_t cy_mutex_pool_create(void);
 
 /** Internal use only. Acquires a recursive mutex. */
-/** \param m SemaphoreHandle_t */
-void cy_mutex_pool_acquire(SemaphoreHandle_t m);
+/** \param m cy_mutex_pool_semaphore_t */
+void cy_mutex_pool_acquire(cy_mutex_pool_semaphore_t m);
 
 /** Internal use only. Releases a recursive mutex. */
-/** \param m SemaphoreHandle_t */
-void cy_mutex_pool_release(SemaphoreHandle_t m);
+/** \param m cy_mutex_pool_semaphore_t */
+void cy_mutex_pool_release(cy_mutex_pool_semaphore_t m);
 
 /** Internal use only. Destroys a recursive mutex. */
-/** \param m SemaphoreHandle_t */
-void cy_mutex_pool_destroy(SemaphoreHandle_t m);
+/** \param m cy_mutex_pool_semaphore_t */
+void cy_mutex_pool_destroy(cy_mutex_pool_semaphore_t m);
+
+#else // defined(MUTEX_POOL_AVAILABLE)
+
+/** Internal use only. If the mutex pool is not available, we have to suspend all threads to ensure
+ *  exclusive access to resources. */
+static inline void cy_mutex_pool_suspend_threads(void)
+{
+    vTaskSuspendAll();
+}
+
+
+/** Internal use only. Ends an exclusive region and allows other threads to start running again. */
+static inline void cy_mutex_pool_resume_threads(void)
+{
+    xTaskResumeAll();
+}
+
+
+#endif // defined(MUTEX_POOL_AVAILABLE)
 
 #ifdef __cplusplus
 }

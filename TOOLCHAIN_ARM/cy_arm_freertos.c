@@ -6,7 +6,9 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2018-2019 Cypress Semiconductor Corporation
+ * Copyright 2018-2019 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +34,8 @@
 #include <cmsis_compiler.h>
 #include "cy_mutex_pool.h"
 
-#if configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 || \
-    configSUPPORT_STATIC_ALLOCATION == 0
+#if defined(COMPONENT_FREERTOS) && (configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 || \
+                                    configSUPPORT_STATIC_ALLOCATION == 0)
 #warning \
     configUSE_MUTEXES, configUSE_RECURSIVE_MUTEXES, and configSUPPORT_STATIC_ALLOCATION must be enabled and set to 1 to use clib-support
 
@@ -102,7 +104,7 @@ void _mutex_acquire(SemaphoreHandle_t* m)
     cy_mutex_pool_acquire(*m);
     #else
     (void)m;
-    vTaskSuspendAll();
+    cy_mutex_pool_suspend_threads();
     #endif
 }
 
@@ -117,7 +119,7 @@ void _mutex_release(SemaphoreHandle_t* m)
     cy_mutex_pool_release(*m);
     #else
     (void)m;
-    xTaskResumeAll();
+    cy_mutex_pool_resume_threads();
     #endif
 }
 
@@ -179,7 +181,7 @@ int __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
         #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
         cy_mutex_pool_acquire(cy_ctor_mutex);
         #else
-        vTaskSuspendAll();
+        cy_mutex_pool_suspend_threads();
         #endif
         if (0 == cy_atomic_load_1(&guard_object->initialized))
         {
@@ -197,7 +199,7 @@ int __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
             #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
             cy_mutex_pool_release(cy_ctor_mutex);
             #else
-            xTaskResumeAll();
+            cy_mutex_pool_resume_threads();
             #endif
         }
     }
@@ -216,7 +218,7 @@ void __cxa_guard_abort(cy_cxa_guard_object_t* guard_object)
         #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
         cy_mutex_pool_release(cy_ctor_mutex);
         #else
-        xTaskResumeAll();
+        cy_mutex_pool_resume_threads();
         #endif
     }
     #ifndef NDEBUG
@@ -301,5 +303,6 @@ char* _sys_command_string(char* unused1 __attribute__((unused)),
 }
 
 
-#endif // if configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 ||
-// configSUPPORT_STATIC_ALLOCATION == 0
+#endif \
+    // defined(COMPONENT_FREERTOS) && (configUSE_MUTEXES == 0 ||
+    //     configUSE_RECURSIVE_MUTEXES == 0 || configSUPPORT_STATIC_ALLOCATION == 0)

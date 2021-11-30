@@ -1,23 +1,27 @@
-# CLib FreeRTOS Support
+# CLib Support Library
 
 ## Overview
 
-The CLib FreeRTOS Support Library provides the necessary hooks to make C library functions such as malloc and free thread safe. This implementation is specific to FreeRTOS and requires it to be present to build. For details on what this library provides see the toolchain specific documentation at:
+The CLib Support Library provides the necessary hooks to make C library functions such as malloc and free thread safe. This implementation supports FreeRTOS and ThreadX and requires the appropriate RTOS to be present to build. For details on what this library provides see the toolchain specific documentation at:
 * ARM: https://developer.arm.com/docs/100073/0614/the-arm-c-and-c-libraries/multithreaded-support-in-arm-c-libraries/management-of-locks-in-multithreaded-applications
 * GCC: https://sourceware.org/newlib/libc.html#g_t_005f_005fmalloc_005flock
 * IAR: http://supp.iar.com/filespublic/updinfo/011261/arm/doc/EWARM_DevelopmentGuide.ENU.pdf
 
-The startup code must call cy_toolchain_init (for GCC and IAR). This must occur after static data initialization and before static constructors. This is done automatically for PSoC devices. See the PSoC startup files for an example.
+The startup code must call cy_toolchain_init (for GCC and IAR). This must occur after static data initialization and before static constructors. This is done automatically for PSoC™ devices. See the PSoC™ startup files for an example.
 
-To enable Thread Local Storage, configUSE_NEWLIB_REENTRANT must be enabled.
+In FreeRTOS to enable Thread Local Storage, configUSE_NEWLIB_REENTRANT must be enabled.
 
-While this is specific to FreeRTOS, it can be used as a basis for supporting other RTOSes as well.
+While this is specific to FreeRTOS and ThreadX, it can be used as a basis for supporting other RTOSes as well.
 
-## Requirements
+## FreeRTOS Requirements
 To use this library, the following configuration options must be enabled in FreeRTOSConfig.h:
 * configUSE_MUTEXES
 * configUSE_RECURSIVE_MUTEXES
 * configSUPPORT_STATIC_ALLOCATION
+
+## ThreadX Requirements
+To use this library, the following configuration option must be enabled:
+* TX_DISABLE_REDUNDANT_CLEARING
 
 When building with IAR, the '--threaded_lib' argument must also be provided when linking. This is done automatically with psoc6make 1.3.1 and later.
 
@@ -79,11 +83,11 @@ NOTE: In either flow, until the application calls **cyhal_rtc_write** the RTC wi
 
 ## More information
 Use the following links for more information, as needed:
-* [Reference Guide](https://cypresssemiconductorco.github.io/clib-support/html/index.html)
+* [Reference Guide](https://infineon.github.io/clib-support/html/index.html)
 * [Cypress Semiconductor, an Infineon Technologies Company](http://www.cypress.com)
-* [Cypress Semiconductor GitHub](https://github.com/cypresssemiconductorco)
-* [ModusToolbox](https://www.cypress.com/products/modustoolbox-software-environment)
-* [RTC APIs](https://github.com/cypresssemiconductorco/mtb-hal-cat1/blob/master/include/cyhal_rtc.h)
+* [Infineon GitHub](https://github.com/infineon)
+* [ModusToolbox™](https://www.cypress.com/products/modustoolbox-software-environment)
+* [RTC APIs](https://github.com/infineon/mtb-hal-cat1/blob/master/include/cyhal_rtc.h)
 
 ---
-© Cypress Semiconductor Corporation, 2020-2021.
+© Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation, 2020-2021.

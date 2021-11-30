@@ -7,7 +7,9 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2021 Cypress Semiconductor Corporation
+ * Copyright 2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +24,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **************************************************************************************************/
+
 #if defined(CY_USING_HAL)
 #include "cy_time.h"
 
@@ -40,19 +43,19 @@ extern "C"
 static cyhal_rtc_t*      cy_time = NULL;
 static cyhal_rtc_t       cy_timer_rtc;
 
-#if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-extern SemaphoreHandle_t cy_timer_mutex;
+#if defined(MUTEX_POOL_AVAILABLE)
+extern cy_mutex_pool_semaphore_t cy_timer_mutex;
 #endif
 
 //--------------------------------------------------------------------------------------------------
 // Acquire a lock to ensure exclusive access
 //--------------------------------------------------------------------------------------------------
-static void mutex_acquire()
+static void mutex_acquire(void)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_acquire(cy_timer_mutex);
     #else
-    vTaskSuspendAll();
+    cy_mutex_pool_suspend_threads();
     #endif
 }
 
@@ -60,12 +63,12 @@ static void mutex_acquire()
 //--------------------------------------------------------------------------------------------------
 // Release the exclusivity lock
 //--------------------------------------------------------------------------------------------------
-static void mutex_release()
+static void mutex_release(void)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_release(cy_timer_mutex);
     #else
-    xTaskResumeAll();
+    cy_mutex_pool_resume_threads();
     #endif
 }
 
@@ -143,7 +146,7 @@ void cy_set_rtc_instance(cyhal_rtc_t* rtc_instance)
 //--------------------------------------------------------------------------------------------------
 // Get the RTC instance.
 //--------------------------------------------------------------------------------------------------
-cyhal_rtc_t* cy_get_rtc_instance()
+cyhal_rtc_t* cy_get_rtc_instance(void)
 {
     return cy_time;
 }
