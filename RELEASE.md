@@ -9,6 +9,8 @@ The CLib Support Library provides the necessary hooks to make C library function
 * Hook for the system time() function
 
 ### What Changed?
+#### v1.3.0
+* Improve type consistency to fix compilation warnings
 #### v1.2.0
 * Add support for ThreadX (GCC Compiler only)
 * Add support for Cortex-R devices (GCC Compiler only)
@@ -26,10 +28,10 @@ This version of the CLib FreeRTOS Support Library was validated for compatibilit
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox™ Software Environment        | 2.4.0   |
+| ModusToolbox™ Software Environment        | 3.0.0   |
 | GCC Compiler                              | 10.3.1  |
-| IAR Compiler                              | 8.4     |
-| ARM Compiler                              | 6.11    |
+| IAR Compiler                              | 9.30.1  |
+| ARM Compiler                              | 6.16    |
 
 Minimum required ModusToolbox™ Software Environment: v2.0
 

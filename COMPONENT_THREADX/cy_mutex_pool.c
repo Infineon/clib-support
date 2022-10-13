@@ -6,7 +6,7 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * Copyright 2021-2022 Cypress Semiconductor Corporation (an Infineon company) or
  * an affiliate of Cypress Semiconductor Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -105,10 +105,10 @@ void cy_mutex_pool_setup(void)
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_create
 //--------------------------------------------------------------------------------------------------
-TX_MUTEX* cy_mutex_pool_create(void)
+cy_mutex_pool_semaphore_t cy_mutex_pool_create(void)
 {
-    int found  = -1;
     UINT old_posture;
+    cy_mutex_pool_semaphore_t handle = NULL;
 
     cy_threadx_check_in_isr();
 
@@ -121,33 +121,33 @@ TX_MUTEX* cy_mutex_pool_create(void)
     {
         if (TX_MUTEX_ID != cy_mutex_pool_storage[i].tx_mutex_id)
         {
-            found = i;
+            handle = &cy_mutex_pool_storage[i];
             break;
         }
     }
     tx_interrupt_control(old_posture);
 
-    if (found >= 0)
+    if (NULL != handle)
     {
-        if (tx_mutex_create(&cy_mutex_pool_storage[found], TX_NULL, TX_NO_INHERIT) != TX_SUCCESS)
+        if (tx_mutex_create(handle, TX_NULL, TX_NO_INHERIT) != TX_SUCCESS)
         {
-            found = -1;
+            handle = NULL;
         }
     }
 
-    if (found < 0)
+    if (NULL == handle)
     {
         __BKPT(0);  // Out of resources
     }
 
-    return &cy_mutex_pool_storage[found];
+    return handle;
 }
 
 
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_acquire
 //--------------------------------------------------------------------------------------------------
-void cy_mutex_pool_acquire(TX_MUTEX* m)
+void cy_mutex_pool_acquire(cy_mutex_pool_semaphore_t m)
 {
     cy_threadx_check_in_isr();
     if (cy_threadx_kernel_started())
@@ -165,7 +165,7 @@ void cy_mutex_pool_acquire(TX_MUTEX* m)
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_release
 //--------------------------------------------------------------------------------------------------
-void cy_mutex_pool_release(TX_MUTEX* m)
+void cy_mutex_pool_release(cy_mutex_pool_semaphore_t m)
 {
     cy_threadx_check_in_isr();
     if (cy_threadx_kernel_started())
@@ -178,7 +178,7 @@ void cy_mutex_pool_release(TX_MUTEX* m)
 //--------------------------------------------------------------------------------------------------
 // cy_mutex_pool_destroy
 //--------------------------------------------------------------------------------------------------
-void cy_mutex_pool_destroy(TX_MUTEX* m)
+void cy_mutex_pool_destroy(cy_mutex_pool_semaphore_t m)
 {
     UINT old_posture;
 

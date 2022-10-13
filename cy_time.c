@@ -7,7 +7,7 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2021 Cypress Semiconductor Corporation (an Infineon company) or
+ * Copyright 2021-2022 Cypress Semiconductor Corporation (an Infineon company) or
  * an affiliate of Cypress Semiconductor Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -76,7 +76,7 @@ static void mutex_release(void)
 //--------------------------------------------------------------------------------------------------
 // Get the current time
 //--------------------------------------------------------------------------------------------------
-time_t time(time_t* timer)
+time_t time(time_t* _timer)
 {
     cy_rslt_t result = CY_RSLT_SUCCESS;
     struct tm rtc_time;
@@ -114,16 +114,16 @@ time_t time(time_t* timer)
     mutex_release();
     if (result != CY_RSLT_SUCCESS)
     {
-        if (timer != NULL)
+        if (_timer != NULL)
         {
-            *timer = ERROR;
+            *_timer = ERROR;
         }
         return ERROR;
     }
 
-    if (timer != NULL)
+    if (_timer != NULL)
     {
-        *timer = seconds;
+        *_timer = seconds;
     }
 
     return seconds;
