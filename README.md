@@ -23,7 +23,9 @@ To use this library, the following configuration options must be enabled in Free
 To use this library, the following configuration option must be enabled:
 * TX_DISABLE_REDUNDANT_CLEARING
 
-When building with IAR, the '--threaded_lib' argument must also be provided when linking. This is done automatically with psoc6make 1.3.1 and later.
+When building with IAR, the '--threaded_lib' argument must be provided when linking. This is done automatically with psoc6make 1.3.1 and later.
+Also, 'TX_ENABLE_IAR_LIBRARY_SUPPORT' must be defined in the application when building with IAR. This enables the ThreadX IAR-specific port for clib thread safety.
+For more information about porting with ThreadX, see the ThreadX GitHub: https://github.com/azure-rtos/threadx/tree/master/ports
 
 ## Features
 * GCC Newlib implementations for:
@@ -44,12 +46,12 @@ When building with IAR, the '--threaded_lib' argument must also be provided when
     * _ttywrch
     * _sys_command_string
 * IAR C library implementations for:
-    * __aeabi_read_tp
+    * __aeabi_read_tp (FreeRTOS)
     * _reclaim_reent
-    * __iar_system_Mtxinit
-    * __iar_system_Mtxlock
-    * __iar_system_Mtxunlock
-    * __iar_system_Mtxdst
+    * __iar_system_Mtxinit (FreeRTOS)
+    * __iar_system_Mtxlock (FreeRTOS)
+    * __iar_system_Mtxunlock (FreeRTOS)
+    * __iar_system_Mtxdst (FreeRTOS)
     * __iar_file_Mtxinit
     * __iar_file_Mtxlock
     * __iar_file_Mtxunlock

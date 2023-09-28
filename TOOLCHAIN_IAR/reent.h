@@ -43,9 +43,11 @@ struct _reent
 
 extern struct _reent* _impure_ptr;          /**< Pointer to struct _reent for current thread */
 
+#if defined(COMPONENT_FREERTOS)
 /** Initializes a struct _reent */
 /** \param r struct _reent */
 void cy_iar_init_reent(struct _reent* r);
+#endif
 
 /** Initializes the struct _reent by pointer x */
 #define _REENT_INIT_PTR(x) cy_iar_init_reent(x)

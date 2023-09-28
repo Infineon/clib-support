@@ -28,7 +28,7 @@
 #if defined(CY_USING_HAL)
 #include "cy_time.h"
 
-// Make sure the RTC is available on this device
+// Make sure the RTC is available on this device.
 #if defined(CY_RSLT_RTC_NOT_INITIALIZED)
 #include "cy_mutex_pool.h"
 

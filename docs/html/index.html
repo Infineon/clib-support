@@ -109,7 +109,7 @@ ThreadX Requirements</h1>
 <p >To use this library, the following configuration option must be enabled:</p><ul>
 <li>TX_DISABLE_REDUNDANT_CLEARING</li>
 </ul>
-<p >When building with IAR, the '&ndash;threaded_lib' argument must also be provided when linking. This is done automatically with psoc6make 1.3.1 and later.</p>
+<p >When building with IAR, the '&ndash;threaded_lib' argument must be provided when linking. This is done automatically with psoc6make 1.3.1 and later. Also, 'TX_ENABLE_IAR_LIBRARY_SUPPORT' must be defined in the application when building with IAR. This enables the ThreadX IAR-specific port for clib thread safety. For more information about porting with ThreadX, see the ThreadX GitHub: <a href="https://github.com/azure-rtos/threadx/tree/master/ports">https://github.com/azure-rtos/threadx/tree/master/ports</a></p>
 <h1><a class="anchor" id="autotoc_md4"></a>
 Features</h1>
 <ul>
@@ -135,12 +135,12 @@ Features</h1>
 </ul>
 </li>
 <li>IAR C library implementations for:<ul>
-<li>__aeabi_read_tp</li>
+<li>__aeabi_read_tp (FreeRTOS)</li>
 <li>_reclaim_reent</li>
-<li>__iar_system_Mtxinit</li>
-<li>__iar_system_Mtxlock</li>
-<li>__iar_system_Mtxunlock</li>
-<li>__iar_system_Mtxdst</li>
+<li>__iar_system_Mtxinit (FreeRTOS)</li>
+<li>__iar_system_Mtxlock (FreeRTOS)</li>
+<li>__iar_system_Mtxunlock (FreeRTOS)</li>
+<li>__iar_system_Mtxdst (FreeRTOS)</li>
 <li>__iar_file_Mtxinit</li>
 <li>__iar_file_Mtxlock</li>
 <li>__iar_file_Mtxunlock</li>

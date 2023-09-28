@@ -9,6 +9,11 @@ The CLib Support Library provides the necessary hooks to make C library function
 * Hook for the system time() function
 
 ### What Changed?
+#### v1.4.2
+* Fix MISRA violations
+* Fix runtime errors with IAR toolchain
+#### v1.4.0
+* Add support for ThreadX with IAR Toolchain
 #### v1.3.0
 * Improve type consistency to fix compilation warnings
 #### v1.2.0
@@ -43,4 +48,4 @@ Use the following links for more information, as needed:
 * [ModusToolbox™](https://www.cypress.com/products/modustoolbox-software-environment)
 
 ---
-© Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation, 2020-2021.
+© Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation, 2020-2023.

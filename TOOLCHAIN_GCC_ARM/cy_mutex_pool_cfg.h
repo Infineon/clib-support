@@ -26,4 +26,6 @@
 
 #pragma once
 
+#ifndef CY_STATIC_MUTEX_MAX
 #define CY_STATIC_MUTEX_MAX 4
+#endif

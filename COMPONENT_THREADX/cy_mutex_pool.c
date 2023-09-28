@@ -117,7 +117,7 @@ cy_mutex_pool_semaphore_t cy_mutex_pool_create(void)
      */
 
     old_posture = tx_interrupt_control(TX_INT_DISABLE);
-    for (int i = 0; i < CY_STATIC_MUTEX_MAX; i++)
+    for (uint16_t i = 0; i < CY_STATIC_MUTEX_MAX; i++)
     {
         if (TX_MUTEX_ID != cy_mutex_pool_storage[i].tx_mutex_id)
         {
@@ -152,7 +152,7 @@ void cy_mutex_pool_acquire(cy_mutex_pool_semaphore_t m)
     cy_threadx_check_in_isr();
     if (cy_threadx_kernel_started())
     {
-        static const int CY_MUTEX_TIMEOUT_TICKS = 10000;
+        static const uint32_t CY_MUTEX_TIMEOUT_TICKS = 10000;
 
         while (tx_mutex_get(m, CY_MUTEX_TIMEOUT_TICKS) != TX_SUCCESS)
         {

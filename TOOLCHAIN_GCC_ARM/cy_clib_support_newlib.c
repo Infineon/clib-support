@@ -33,6 +33,7 @@
 #include <envlock.h>
 #include <cmsis_compiler.h>
 #include "cy_mutex_pool.h"
+#include "cy_utils.h"
 
 #if defined(COMPONENT_FREERTOS) && ((configUSE_MUTEXES == 0) || \
     (configUSE_RECURSIVE_MUTEXES == 0) || (configSUPPORT_STATIC_ALLOCATION == 0))
@@ -66,12 +67,12 @@ void cy_toolchain_init(void)
 //--------------------------------------------------------------------------------------------------
 // _sbrk
 //--------------------------------------------------------------------------------------------------
-caddr_t _sbrk(int incr)
+caddr_t _sbrk(int32_t incr)
 {
     extern uint8_t  __HeapBase, __HeapLimit;
     static uint8_t* heapBrk = &__HeapBase;
     uint8_t*        prevBrk = heapBrk;
-    if (incr > (int)(&__HeapLimit - heapBrk))
+    if (incr > (int32_t)(&__HeapLimit - heapBrk))
     {
         errno = ENOMEM;
         return (caddr_t)-1;
@@ -157,6 +158,8 @@ typedef struct
 int16_t __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
 {
     int16_t acquired = 0;
+    CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Directive 4.6', 2,
+                                 'Standard macro atomic_load generates code using char type.');
     if (0 == atomic_load(&guard_object->initialized))
     {
         #if defined(MUTEX_POOL_AVAILABLE)
@@ -184,6 +187,7 @@ int16_t __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
             #endif
         }
     }
+    CY_MISRA_BLOCK_END('MISRA C-2012 Directive 4.6');
     return acquired;
 }
 
@@ -216,7 +220,10 @@ void __cxa_guard_abort(cy_cxa_guard_object_t* guard_object)
 //--------------------------------------------------------------------------------------------------
 void __cxa_guard_release(cy_cxa_guard_object_t* guard_object)
 {
+    CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Directive 4.6', 1,
+                                 'Standard macro atomic_load generates code using char type.');
     atomic_store(&guard_object->initialized, 1);
+    CY_MISRA_BLOCK_END('MISRA C-2012 Directive 4.6');
     __cxa_guard_abort(guard_object);    // Release mutex
 }
 

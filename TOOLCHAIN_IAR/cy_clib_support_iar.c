@@ -1,8 +1,8 @@
 /***********************************************************************************************//**
- * \file cy_iar_freertos.c
+ * \file cy_clib_support_iar.c
  *
  * \brief
- * IAR C library port for FreeRTOS
+ * IAR C library port for clib-support library
  *
  ***************************************************************************************************
  * \copyright
@@ -30,9 +30,6 @@
 #include <stdlib.h>
 #include <DLib_Threads.h>
 #include "reent.h"
-#include <FreeRTOS.h>
-#include <semphr.h>
-#include <task.h>
 #include <cmsis_compiler.h>
 #include "cy_mutex_pool.h"
 
@@ -40,6 +37,10 @@
                                     configSUPPORT_STATIC_ALLOCATION == 0)
 #warning \
     configUSE_MUTEXES, configUSE_RECURSIVE_MUTEXES, and configSUPPORT_STATIC_ALLOCATION must be enabled and set to 1 to use clib-support
+
+#elif defined(COMPONENT_THREADX) && !defined(TX_ENABLE_IAR_LIBRARY_SUPPORT)
+#error \
+    "In order to enable thread safe library support on IAR, add TX_ENABLE_IAR_LIBRARY_SUPPORT to defines"
 
 #else
 
@@ -49,23 +50,31 @@
 struct _reent  cy_iar_global_impure = { __section_begin("__iar_tls$$DATA") };
 struct _reent* _impure_ptr          = &cy_iar_global_impure;
 
-#if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-SemaphoreHandle_t cy_timer_mutex;
+#if defined(MUTEX_POOL_AVAILABLE)
+cy_mutex_pool_semaphore_t cy_timer_mutex;
 #endif
 
+#if defined(COMPONENT_THREADX)
+cy_mutex_pool_semaphore_t cy_malloc_mutex;
+#endif // if defined(COMPONENT_THREADX)
 
 //--------------------------------------------------------------------------------------------------
 // __aeabi_read_tp
 //--------------------------------------------------------------------------------------------------
+#if !defined(COMPONENT_THREADX)
+// __aeabi_read_tp functions is defined in the tx_iar.c port provided by ThreadX
 void* __aeabi_read_tp(void)
 {
     return _impure_ptr->ptr;
 }
 
 
+#endif
+
 //--------------------------------------------------------------------------------------------------
 // cy_iar_init_reent
 //--------------------------------------------------------------------------------------------------
+#if defined(COMPONENT_FREERTOS)
 void cy_iar_init_reent(struct _reent* r)
 {
     size_t tls_size = __iar_tls_size();
@@ -82,6 +91,9 @@ void cy_iar_init_reent(struct _reent* r)
 }
 
 
+#endif //#if defined(COMPONENT_FREERTOS)
+
+
 //--------------------------------------------------------------------------------------------------
 // _reclaim_reent
 //--------------------------------------------------------------------------------------------------
@@ -94,7 +106,13 @@ void _reclaim_reent(struct _reent* r)
     //__call_thread_dtors();
     if (r != &cy_iar_global_impure)
     {
+        #if defined(COMPONENT_FREERTOS)
         vPortFree(r->ptr);
+        #elif defined(COMPONENT_THREADX)
+        cy_mutex_pool_acquire(cy_malloc_mutex);
+        free(r->ptr);
+        cy_mutex_pool_release(cy_malloc_mutex);
+        #endif // if defined(COMPONENT_FREERTOS)
         r->ptr = NULL;
     }
 }
@@ -104,22 +122,34 @@ void _reclaim_reent(struct _reent* r)
 
 void cy_toolchain_init(void)
 {
+    #if !defined(COMPONENT_THREADX)
     extern void __iar_Initlocks(void);
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #endif
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_setup();
     cy_timer_mutex   = cy_mutex_pool_create();
     #endif
+    #if defined(COMPONENT_THREADX)
+    cy_malloc_mutex = cy_mutex_pool_create();
+    #endif
+    // __iar_Initlocks is called in ThreadX during setup; calling it here would lead
+    // to (invalid) double initialization of the mutexes
+    #if !defined(COMPONENT_THREADX)
     __iar_Initlocks();
+    #endif
 }
 
+
+#if !defined(COMPONENT_THREADX)
+// __iar_system_* functions are defined in the tx_iar.c port provided by ThreadX
 
 //--------------------------------------------------------------------------------------------------
 // __iar_system_Mtxinit
 //--------------------------------------------------------------------------------------------------
 void __iar_system_Mtxinit(__iar_Rmtx* arg)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-    *(SemaphoreHandle_t*)arg = cy_mutex_pool_create();
+    #if defined(MUTEX_POOL_AVAILABLE)
+    *(cy_mutex_pool_semaphore_t*)arg = cy_mutex_pool_create();
     #else
     (void)arg;
     #endif
@@ -131,8 +161,8 @@ void __iar_system_Mtxinit(__iar_Rmtx* arg)
 //--------------------------------------------------------------------------------------------------
 void __iar_system_Mtxlock(__iar_Rmtx* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-    cy_mutex_pool_acquire(*(SemaphoreHandle_t*)m);
+    #if defined(MUTEX_POOL_AVAILABLE)
+    cy_mutex_pool_acquire(*(cy_mutex_pool_semaphore_t*)m);
     #else
     (void)m;
     cy_mutex_pool_suspend_threads();
@@ -145,8 +175,8 @@ void __iar_system_Mtxlock(__iar_Rmtx* m)
 //--------------------------------------------------------------------------------------------------
 void __iar_system_Mtxunlock(__iar_Rmtx* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-    cy_mutex_pool_release(*(SemaphoreHandle_t*)m);
+    #if defined(MUTEX_POOL_AVAILABLE)
+    cy_mutex_pool_release(*(cy_mutex_pool_semaphore_t*)m);
     #else
     (void)m;
     cy_mutex_pool_resume_threads();
@@ -159,8 +189,8 @@ void __iar_system_Mtxunlock(__iar_Rmtx* m)
 //--------------------------------------------------------------------------------------------------
 void __iar_system_Mtxdst(__iar_Rmtx* arg)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-    SemaphoreHandle_t* m = (SemaphoreHandle_t*)arg;
+    #if defined(MUTEX_POOL_AVAILABLE)
+    cy_mutex_pool_semaphore_t* m = (cy_mutex_pool_semaphore_t*)arg;
     cy_mutex_pool_destroy(*m);
     *m = NULL;
     #else
@@ -168,6 +198,10 @@ void __iar_system_Mtxdst(__iar_Rmtx* arg)
     #endif
 }
 
+
+#endif // if !defined(COMPONENT_THREADX)
+
+#if ((!_DLIB_FILE_DESCRIPTOR) || (!defined(COMPONENT_THREADX)))
 
 //--------------------------------------------------------------------------------------------------
 // __iar_file_Mtxinit
@@ -205,6 +239,9 @@ void __iar_file_Mtxdst(__iar_Rmtx* m)
 }
 
 
+#endif // if ((!_DLIB_FILE_DESCRIPTOR) || (!defined(COMPONENT_THREADX)))
+
+
 #if configSUPPORT_DYNAMIC_ALLOCATION
 
 //--------------------------------------------------------------------------------------------------
@@ -212,9 +249,9 @@ void __iar_file_Mtxdst(__iar_Rmtx* m)
 //--------------------------------------------------------------------------------------------------
 void __iar_Initdynamiclock(__iar_Rmtx* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-    SemaphoreHandle_t handle = xSemaphoreCreateRecursiveMutex();
-    *(SemaphoreHandle_t*)m = handle;
+    #if defined(MUTEX_POOL_AVAILABLE)
+    cy_mutex_pool_semaphore_t handle = xSemaphoreCreateRecursiveMutex();
+    *(cy_mutex_pool_semaphore_t*)m = handle;
     if (NULL == handle)
     {
         __BKPT(0);  // Failed to allocate C++ dynamic lock
@@ -248,9 +285,9 @@ void __iar_Unlockdynamiclock(__iar_Rmtx* m)
 //--------------------------------------------------------------------------------------------------
 void __iar_Dstdynamiclock(__iar_Rmtx* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-    vSemaphoreDelete(*(SemaphoreHandle_t*)m);
-    *(SemaphoreHandle_t*)m = NULL;
+    #if defined(MUTEX_POOL_AVAILABLE)
+    vSemaphoreDelete(*(cy_mutex_pool_semaphore_t*)m);
+    *(cy_mutex_pool_semaphore_t*)m = NULL;
     #else
     (void)m;
     #endif
