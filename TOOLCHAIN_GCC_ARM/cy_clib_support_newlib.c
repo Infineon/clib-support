@@ -31,7 +31,11 @@
 #include <sys/types.h>
 #include <sys/unistd.h>
 #include <envlock.h>
+#if !defined (COMPONENT_CAT5)
 #include <cmsis_compiler.h>
+#else
+#include "cyhal_system.h"
+#endif
 #include "cy_mutex_pool.h"
 #include "cy_utils.h"
 
@@ -72,7 +76,8 @@ caddr_t _sbrk(int32_t incr)
     extern uint8_t  __HeapBase, __HeapLimit;
     static uint8_t* heapBrk = &__HeapBase;
     uint8_t*        prevBrk = heapBrk;
-    if (incr > (int32_t)(&__HeapLimit - heapBrk))
+    if ((incr > (int32_t)(&__HeapLimit - heapBrk)) ||
+        (((int32_t)heapBrk + incr) < (int32_t)(&__HeapBase)))
     {
         errno = ENOMEM;
         return (caddr_t)-1;

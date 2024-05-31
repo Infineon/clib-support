@@ -80,7 +80,13 @@ time_t time(time_t* _timer)
 {
     cy_rslt_t result = CY_RSLT_SUCCESS;
     struct tm rtc_time;
+    #if defined(COMPONENT_CAT5)
+    /* For CAT5, default time is set as January 1, 2011 12:00:00 AM.
+       Epoch timestamp: 1293840000 */
+    time_t seconds = 1293840000;
+    #else
     time_t seconds = 0;
+    #endif
 
     mutex_acquire();
 

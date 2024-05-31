@@ -1,8 +1,8 @@
 /***********************************************************************************************//**
- * \file cy_arm_freertos.c
+ * \file cy_clib_support_arm.c
  *
  * \brief
- * ARM C library port for FreeRTOS
+ * ARM C library port for RTOS
  *
  ***************************************************************************************************
  * \copyright
@@ -27,12 +27,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "reent.h"
-#include <FreeRTOS.h>
-#include <semphr.h>
-#include <task.h>
 #include <cmsis_compiler.h>
+#include "reent.h"
 #include "cy_mutex_pool.h"
+#include "rt_misc.h"
+#if defined(COMPONENT_THREADX)
+#include "cy_pdl.h"
+#endif // defined(COMPONENT_THREADX)
 
 #if defined(COMPONENT_FREERTOS) && (configUSE_MUTEXES == 0 || configUSE_RECURSIVE_MUTEXES == 0 || \
                                     configSUPPORT_STATIC_ALLOCATION == 0)
@@ -41,24 +42,63 @@
 
 #else
 
+/* guarantee that no functions using semihosting are included in your application */
 __asm(".global __use_no_semihosting\n\t");
+#if defined(COMPONENT_CAT5)
+/* cat5 provides a thread stack separate from heap, so disable automatic collision detection */
+__asm(".global __use_two_region_memory\n\t");
+#endif // defined(COMPONENT_CAT5)
+#if defined(MUTEX_POOL_AVAILABLE)
+cy_mutex_pool_semaphore_t cy_ctor_mutex;
+cy_mutex_pool_semaphore_t cy_timer_mutex;
+#endif // defined(MUTEX_POOL_AVAILABLE)
 
-#if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
-SemaphoreHandle_t cy_ctor_mutex;
-SemaphoreHandle_t cy_timer_mutex;
-#endif
+#if defined(COMPONENT_CAT5)
+extern size_t __rt_heap_extend(size_t /*size*/, void** /*block*/);
+extern char Image$$HEAP$$ZI$$Base[];
+extern int Image$$HEAP$$ZI$$Limit;
+#endif // defined(COMPONENT_CAT5)
 
+#if defined(COMPONENT_THREADX)
+static uint16_t _scheduler_suspend_count = 0;
+static uint32_t _interrupt_primask = 0;
+#endif // defined(COMPONENT_THREADX)
 //--------------------------------------------------------------------------------------------------
 // _platform_post_stackheap_init
 //--------------------------------------------------------------------------------------------------
 void _platform_post_stackheap_init(void)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(COMPONENT_CAT5)
+    __rt_lib_init((unsigned)&Image$$HEAP$$ZI$$Base[0], (unsigned)&Image$$HEAP$$ZI$$Limit);
+    #endif // defined(COMPONENT_CAT5)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_ctor_mutex = cy_mutex_pool_create();
     cy_timer_mutex = cy_mutex_pool_create();
-    #endif
+    #endif // defined(MUTEX_POOL_AVAILABLE)
 }
 
+
+#if defined(COMPONENT_CAT5)
+//--------------------------------------------------------------------------------------------------
+// __rt_heap_extend
+//--------------------------------------------------------------------------------------------------
+size_t __rt_heap_extend(size_t incr, void** block)
+{
+    static uint8_t* heap_base = (uint8_t*)Image$$HEAP$$ZI$$Base;
+    static uint8_t* heap_limit = (uint8_t*)&Image$$HEAP$$ZI$$Limit;
+    static uint8_t* heapBrk = (uint8_t*)Image$$HEAP$$ZI$$Base;
+    if ((incr > (int32_t)(heap_limit - heapBrk)) ||
+        (((int32_t)heapBrk + incr) < (int32_t)heap_base))
+    {
+        return 0;
+    }
+    *block = (void*)heapBrk;
+    heapBrk += incr;
+    return incr;
+}
+
+
+#endif // defined(COMPONENT_CAT5)
 
 // ARM thread-local state
 
@@ -83,13 +123,13 @@ struct _reent* __user_perthread_libspace(void)
 // _mutex_initialize
 //--------------------------------------------------------------------------------------------------
 __attribute__((used))
-int _mutex_initialize(SemaphoreHandle_t* m)
+int _mutex_initialize(cy_mutex_pool_semaphore_t* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     *m = cy_mutex_pool_create();
     #else
     (void)m;
-    #endif
+    #endif // defined(MUTEX_POOL_AVAILABLE)
     return 1;
 }
 
@@ -98,14 +138,23 @@ int _mutex_initialize(SemaphoreHandle_t* m)
 // _mutex_acquire
 //--------------------------------------------------------------------------------------------------
 __attribute__((used))
-void _mutex_acquire(SemaphoreHandle_t* m)
+void _mutex_acquire(cy_mutex_pool_semaphore_t* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_acquire(*m);
     #else
+    #if defined(COMPONENT_FREERTOS)
     (void)m;
     cy_mutex_pool_suspend_threads();
-    #endif
+    #elif defined(COMPONENT_THREADX)
+    ++_scheduler_suspend_count;
+    /* ThreadX scheduler suspend for other threads to do not interfere */
+    if (_scheduler_suspend_count == 1)
+    {
+        _interrupt_primask = Cy_SysLib_EnterCriticalSection();
+    }
+    #endif // defined(COMPONENT_FREERTOS)
+    #endif // defined(MUTEX_POOL_AVAILABLE)
 }
 
 
@@ -113,14 +162,26 @@ void _mutex_acquire(SemaphoreHandle_t* m)
 // _mutex_release
 //--------------------------------------------------------------------------------------------------
 __attribute__((used))
-void _mutex_release(SemaphoreHandle_t* m)
+void _mutex_release(cy_mutex_pool_semaphore_t* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_release(*m);
     #else
+    #if defined(COMPONENT_FREERTOS)
     (void)m;
     cy_mutex_pool_resume_threads();
-    #endif
+    #elif defined(COMPONENT_THREADX)
+    /* ThreadX scheduler resume , allows other threads to run */
+    if (_scheduler_suspend_count > 0)
+    {
+        if (_scheduler_suspend_count == 1)
+        {
+            Cy_SysLib_ExitCriticalSection(_interrupt_primask);
+        }
+        --_scheduler_suspend_count;
+    }
+    #endif // defined(COMPONENT_FREERTOS)
+    #endif // defined(MUTEX_POOL_AVAILABLE)
 }
 
 
@@ -128,11 +189,11 @@ void _mutex_release(SemaphoreHandle_t* m)
 // _mutex_free
 //--------------------------------------------------------------------------------------------------
 __attribute__((used))
-void _mutex_free(SemaphoreHandle_t* m)
+void _mutex_free(cy_mutex_pool_semaphore_t* m)
 {
-    #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+    #if defined(MUTEX_POOL_AVAILABLE)
     cy_mutex_pool_destroy(*m);
-    #endif
+    #endif //defined(MUTEX_POOL_AVAILABLE)
     *m = NULL;
 }
 
@@ -178,11 +239,21 @@ int __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
     int acquired = 0;
     if (0 == cy_atomic_load_1(&guard_object->initialized))
     {
-        #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+        #if defined(MUTEX_POOL_AVAILABLE)
         cy_mutex_pool_acquire(cy_ctor_mutex);
+        #if defined(COMPONENT_THREADX)
+        ++_scheduler_suspend_count;
+        /* ThreadX scheduler suspend for other threads to do not interfere */
+        if (_scheduler_suspend_count == 1)
+        {
+            _interrupt_primask = Cy_SysLib_EnterCriticalSection();
+        }
+        #endif // defined(COMPONENT_THREADX)
         #else
+        #if defined(COMPONENT_FREERTOS)
         cy_mutex_pool_suspend_threads();
-        #endif
+        #endif // defined(COMPONENT_FREERTOS)
+        #endif // defined(MUTEX_POOL_AVAILABLE)
         if (0 == cy_atomic_load_1(&guard_object->initialized))
         {
             acquired = 1;
@@ -196,11 +267,24 @@ int __cxa_guard_acquire(cy_cxa_guard_object_t* guard_object)
         }
         else
         {
-            #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+            #if defined(MUTEX_POOL_AVAILABLE)
             cy_mutex_pool_release(cy_ctor_mutex);
-            #else
+            #if defined(COMPONENT_THREADX)
+            /* ThreadX scheduler resume , allows other threads to run */
+            if (_scheduler_suspend_count > 0)
+            {
+                if (_scheduler_suspend_count == 1)
+                {
+                    Cy_SysLib_ExitCriticalSection(_interrupt_primask);
+                }
+                --_scheduler_suspend_count;
+            }
+            #endif // defined(COMPONENT_THREADX)
+            #else // if defined(MUTEX_POOL_AVAILABLE)
+            #if defined(COMPONENT_FREERTOS)
             cy_mutex_pool_resume_threads();
-            #endif
+            #endif // defined(COMPONENT_FREERTOS)
+            #endif // defined(MUTEX_POOL_AVAILABLE)
         }
     }
     return acquired;
@@ -215,11 +299,24 @@ void __cxa_guard_abort(cy_cxa_guard_object_t* guard_object)
     if (guard_object->acquired)
     {
         guard_object->acquired = 0;
-        #if (configHEAP_ALLOCATION_SCHEME != HEAP_ALLOCATION_TYPE3)
+        #if defined(MUTEX_POOL_AVAILABLE)
         cy_mutex_pool_release(cy_ctor_mutex);
-        #else
+        #if defined(COMPONENT_THREADX)
+        /* ThreadX scheduler resume , allows other threads to run */
+        if (_scheduler_suspend_count > 0)
+        {
+            if (_scheduler_suspend_count == 1)
+            {
+                Cy_SysLib_ExitCriticalSection(_interrupt_primask);
+            }
+            --_scheduler_suspend_count;
+        }
+        #endif // defined(COMPONENT_THREADX)
+        #else // if defined(MUTEX_POOL_AVAILABLE)
+        #if defined(COMPONENT_FREERTOS)
         cy_mutex_pool_resume_threads();
-        #endif
+        #endif // defined(COMPONENT_FREERTOS)
+        #endif // defined(MUTEX_POOL_AVAILABLE)
     }
     #ifndef NDEBUG
     else

@@ -26,7 +26,11 @@
 
 #include <stdbool.h>
 #include <string.h>
+#if !defined (COMPONENT_CAT5)
 #include <cmsis_compiler.h>
+#else
+#include "cyhal_system.h"
+#endif
 
 #include "cy_mutex_pool.h"
 #include "cy_mutex_pool_cfg.h"
