@@ -70,18 +70,14 @@ For more information about porting with ThreadX, see the ThreadX GitHub: https:/
 * time function implementation from time.h
 
 ### Time Support Details
-When using the HAL (CY_USING_HAL defined) the **time** function returns the time in seconds from microcontroller Real-Time Clock (RTC). Additionally, functions  **cy_set_rtc_instance** and **cy_get_rtc_instance** are provided to interact with the RTC instance used. There are two ways to set this up.
-1. Setup using an existing RTC instance:
-    * Application initializes RTC using **cyhal_rtc_init** API
-    * Application writes the current time to RTC using **cyhal_rtc_write** API
-    * Application sets the RTC instance using **cy_set_rtc_instance** API
-    * Application calls **time** function to get the time from RTC
-2. Allow time to initialize the RTC instance:
-    * Application calls **time** function to get the time from RTC. The time function will initializes RTC
-    * Application can get the RTC instance using **cy_get_rtc_instance** API
-    * Application can write the current time to RTC using **cyhal_rtc_write** API
+When using the HAL the **time** function returns the time in seconds from microcontroller Real-Time Clock (RTC). Additionally, functions  **mtb_clib_support_init** and **mtb_clib_support_get_rtc** are provided to interact with the CLIB support RTC handle used. Follow below steps to set this up.
+1. Setup using an existing CLIB support RTC handle:
+    * Application initializes RTC handle using PDL API
+    * Application writes the current time to RTC using PDL API
+    * Application sets the CLIB support RTC handle using **mtb_clib_support_init** API
+    * Application calls **time** function to get the time from CLIB support RTC
 
-NOTE: In either flow, until the application calls **cyhal_rtc_write** the RTC will only be initialized with a default time. This means that time deltas will be accurate, but absolute times will not have any relation to the real time.
+NOTE: For `MTB_HAL_API_VERSION >= 3`, **mtb_clib_support_init** must be called before **time** is invoked. Otherwise, **time** will assert and (if asserts are enabled) and return a default time value.
 
 ## More information
 Use the following links for more information, as needed:
@@ -89,7 +85,7 @@ Use the following links for more information, as needed:
 * [Cypress Semiconductor, an Infineon Technologies Company](http://www.cypress.com)
 * [Infineon GitHub](https://github.com/infineon)
 * [ModusToolbox™](https://www.cypress.com/products/modustoolbox-software-environment)
-* [RTC APIs](https://github.com/infineon/mtb-hal-cat1/blob/master/include/cyhal_rtc.h)
+* [RTC APIs](https://github.com/infineon/mtb-hal-cat1/blob/master/include/mtb_hal_rtc.h)
 
 ---
 © Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation, 2020-2021.

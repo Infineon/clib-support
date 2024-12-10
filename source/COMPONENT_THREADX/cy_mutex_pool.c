@@ -28,7 +28,9 @@
 #include <string.h>
 #if !defined (COMPONENT_CAT5)
 #include <cmsis_compiler.h>
-#else
+#elif defined(COMPONENT_MTB_HAL)
+#include "mtb_hal_system.h"
+#elif defined(CY_USING_HAL)
 #include "cyhal_system.h"
 #endif
 

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.2"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>CLib Support (clib-support)</title>
+<title>(clib-support)</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -27,7 +27,7 @@
  <tr style="height: 56px;">
   <td id="projectlogo"><a href="http://www.cypress.com/"><img alt="Logo" src="logo.png"/></a></td>
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">CLib Support (clib-support)</div>
+   <div id="projectname">(clib-support)</div>
   </td>
  </tr>
  </tbody>
@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
   <div class="headertitle"><div class="title">CLib Support Library </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p ><a class="anchor" id="md_source_support_clib_support_README_doxygen"></a> </p>
+<div class="textblock"><p ><a class="anchor" id="md_output_README_doxygen"></a> </p>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Overview</h1>
 <p >The CLib Support Library provides the necessary hooks to make C library functions such as malloc and free thread safe. This implementation supports FreeRTOS and ThreadX and requires the appropriate RTOS to be present to build. For details on what this library provides see the toolchain specific documentation at:</p><ul>
@@ -164,22 +164,16 @@ Features</h1>
 </ul>
 <h2><a class="anchor" id="autotoc_md5"></a>
 Time Support Details</h2>
-<p >When using the HAL (CY_USING_HAL defined) the <b>time</b> function returns the time in seconds from microcontroller Real-Time Clock (RTC). Additionally, functions <b>cy_set_rtc_instance</b> and <b>cy_get_rtc_instance</b> are provided to interact with the RTC instance used. There are two ways to set this up.</p><ol type="1">
-<li>Setup using an existing RTC instance:<ul>
-<li>Application initializes RTC using <b>cyhal_rtc_init</b> API</li>
-<li>Application writes the current time to RTC using <b>cyhal_rtc_write</b> API</li>
-<li>Application sets the RTC instance using <b>cy_set_rtc_instance</b> API</li>
-<li>Application calls <b>time</b> function to get the time from RTC</li>
-</ul>
-</li>
-<li>Allow time to initialize the RTC instance:<ul>
-<li>Application calls <b>time</b> function to get the time from RTC. The time function will initializes RTC</li>
-<li>Application can get the RTC instance using <b>cy_get_rtc_instance</b> API</li>
-<li>Application can write the current time to RTC using <b>cyhal_rtc_write</b> API</li>
+<p >When using the HAL the <b>time</b> function returns the time in seconds from microcontroller Real-Time Clock (RTC). Additionally, functions <b>mtb_clib_support_init</b> and <b>mtb_clib_support_get_rtc</b> are provided to interact with the CLIB support RTC handle used. Follow below steps to set this up.</p><ol type="1">
+<li>Setup using an existing CLIB support RTC handle:<ul>
+<li>Application initializes RTC handle using PDL API</li>
+<li>Application writes the current time to RTC using PDL API</li>
+<li>Application sets the CLIB support RTC handle using <b>mtb_clib_support_init</b> API</li>
+<li>Application calls <b>time</b> function to get the time from CLIB support RTC</li>
 </ul>
 </li>
 </ol>
-<p >NOTE: In either flow, until the application calls <b>cyhal_rtc_write</b> the RTC will only be initialized with a default time. This means that time deltas will be accurate, but absolute times will not have any relation to the real time.</p>
+<p >NOTE: For <code>MTB_HAL_API_VERSION &gt;= 3</code>, <b>mtb_clib_support_init</b> must be called before <b>time</b> is invoked. Otherwise, <b>time</b> will assert and (if asserts are enabled) and return a default time value.</p>
 <h1><a class="anchor" id="autotoc_md6"></a>
 More information</h1>
 <p >Use the following links for more information, as needed:</p><ul>
@@ -187,7 +181,7 @@ More information</h1>
 <li><a href="http://www.cypress.com">Cypress Semiconductor, an Infineon Technologies Company</a></li>
 <li><a href="https://github.com/infineon">Infineon GitHub</a></li>
 <li><a href="https://www.cypress.com/products/modustoolbox-software-environment">ModusToolbox™</a></li>
-<li><a href="https://github.com/infineon/mtb-hal-cat1/blob/master/include/cyhal_rtc.h">RTC APIs</a></li>
+<li><a href="https://github.com/infineon/mtb-hal-cat1/blob/master/include/mtb_hal_rtc.h">RTC APIs</a></li>
 </ul>
 <hr  />
 <p> © Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation, 2020-2021. </p>
@@ -198,7 +192,7 @@ More information</h1>
 <div id="nav-path" class="navpath">
     <ul>
         <li class="footer">
-            Generated for <b>CLib Support (clib-support)</b> by <b>Cypress Semiconductor Corporation</b>.
+            Generated for <b>(clib-support)</b> by <b>Cypress Semiconductor Corporation</b>.
             All rights reserved.
         </li>
     </ul>

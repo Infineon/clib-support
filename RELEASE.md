@@ -9,6 +9,8 @@ The CLib Support Library provides the necessary hooks to make C library function
 * Hook for the system time() function
 
 ### What Changed?
+#### v1.6.0
+* Add support for HAL API version 3
 #### v1.5.0
 * Fix _sbrk() in decrement memory allocated
 * Add support for ThreadX (ARM Compiler)
