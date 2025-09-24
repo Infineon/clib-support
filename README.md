@@ -6,6 +6,7 @@ The CLib Support Library provides the necessary hooks to make C library function
 * ARM: https://developer.arm.com/docs/100073/0614/the-arm-c-and-c-libraries/multithreaded-support-in-arm-c-libraries/management-of-locks-in-multithreaded-applications
 * GCC: https://sourceware.org/newlib/libc.html#g_t_005f_005fmalloc_005flock
 * IAR: http://supp.iar.com/filespublic/updinfo/011261/arm/doc/EWARM_DevelopmentGuide.ENU.pdf
+* LLVM ARM: https://github.com/picolibc/picolibc/blob/main/doc/locking.md 
 
 The startup code must call cy_toolchain_init (for GCC and IAR). This must occur after static data initialization and before static constructors. This is done automatically for PSoC™ devices. See the PSoC™ startup files for an example.
 
@@ -26,6 +27,13 @@ To use this library, the following configuration option must be enabled:
 When building with IAR, the '--threaded_lib' argument must be provided when linking. This is done automatically with psoc6make 1.3.1 and later.
 Also, 'TX_ENABLE_IAR_LIBRARY_SUPPORT' must be defined in the application when building with IAR. This enables the ThreadX IAR-specific port for clib thread safety.
 For more information about porting with ThreadX, see the ThreadX GitHub: https://github.com/azure-rtos/threadx/tree/master/ports
+
+## LLVM ARM Requirements
+The LLVM ARM toolchain utilizes the picolibc library.
+
+Currently, this toolchain is only supported in use with FreeRTOS.
+
+Because of the implementation in which picolibc handles printf calls, in the context of RTOS applications, it is up to the application to provide thread safety for printf statements when multiple threads share the same stream.
 
 ## Features
 * GCC Newlib implementations for:
@@ -63,6 +71,17 @@ For more information about porting with ThreadX, see the ThreadX GitHub: https:/
     * __close
     * __lseek
     * remove
+* LLVM ARM picolibc implementations for:
+    * __retarget_lock_init_recursive
+    * __retarget_lock_init
+    * __retarget_lock_close_recursive
+    * __retarget_lock_close
+    * __retarget_lock_acquire_recursive
+    * __retarget_lock_acquire
+    * __retarget_lock_release_recursive
+    * __retarget_lock_release
+    * __aeabi_errno_addr
+    * _exit
 * C++ implementations for:
     * __cxa_guard_acquire
     * __cxa_guard_abort

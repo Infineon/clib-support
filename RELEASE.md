@@ -5,10 +5,13 @@ The CLib Support Library provides the necessary hooks to make C library function
 * Thread safety hooks for GCC Newlib
 * Thread safety hooks for ARM C library
 * Thread safety hooks for IAR C library
+* Thread safety hooks for LLVM ARM picolibc library
 * Thread safety hooks for C++
 * Hook for the system time() function
 
 ### What Changed?
+#### v1.7.0
+* Add support for LLVM ARM Compiler (FreeRTOS only)
 #### v1.6.0
 * Add support for HAL API version 3
 #### v1.5.0
@@ -43,8 +46,14 @@ This version of the CLib FreeRTOS Support Library was validated for compatibilit
 | GCC Compiler                              | 10.3.1  |
 | IAR Compiler                              | 9.40.2  |
 | ARM Compiler                              | 6.16    |
+| LLVM ARM Compiler                             | 18.1.3  |
 
 Minimum required ModusToolbox™ Software Environment: v2.0
+
+### LLVM ARM Compiler and printf
+The LLVM ARM toolchain utilizes the picolibc library.
+
+Because of the implementation in which picolibc handles printf calls, in the context of RTOS applications, it is up to the application to provide thread safety for printf statements when multiple threads share the same stream.
 
 ### More information
 Use the following links for more information, as needed:

@@ -26,6 +26,7 @@
  **************************************************************************************************/
 
 #include "cy_time.h"
+#include "cy_utils.h"
 
 // Make sure the RTC is available on this device.
 #if defined(_MTB_CLIB_SUPPORT_RTC_AVAILABLE)

@@ -87,11 +87,16 @@ static void cy_freertos_check_in_isr(void)
 // data initialization. Use the __no_init attribute so the mutex data
 // will not be overwritten during static data initialization.
 #   define CY_ATTR_NO_INIT __no_init
+#elif defined(__llvm__) && !defined(__ARMCC_VERSION)
+// For LLVM_ARM, the mutex pool and mutexes are also set up before
+// static data initialization. Similarly to IAR, use the __NO_INIT
+// attribute so the mutex data will not be overwritten.
+#   define CY_ATTR_NO_INIT __NO_INIT
 #else
 // The other toolchains perform mutex initialization after static data
 // initialization so they do not require any special behavior.
 #   define CY_ATTR_NO_INIT
-#endif
+#endif // ifdef __ICCARM__
 
 static CY_ATTR_NO_INIT StaticSemaphore_t cy_mutex_pool_storage[CY_STATIC_MUTEX_MAX];
 static CY_ATTR_NO_INIT SemaphoreHandle_t cy_mutex_pool_handle[CY_STATIC_MUTEX_MAX];

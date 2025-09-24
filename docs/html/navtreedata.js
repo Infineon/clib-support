@@ -29,10 +29,11 @@ var NAVTREE =
       [ "Overview", "index.html#autotoc_md1", null ],
       [ "FreeRTOS Requirements", "index.html#autotoc_md2", null ],
       [ "ThreadX Requirements", "index.html#autotoc_md3", null ],
-      [ "Features", "index.html#autotoc_md4", [
-        [ "Time Support Details", "index.html#autotoc_md5", null ]
+      [ "LLVM ARM Requirements", "index.html#autotoc_md4", null ],
+      [ "Features", "index.html#autotoc_md5", [
+        [ "Time Support Details", "index.html#autotoc_md6", null ]
       ] ],
-      [ "More information", "index.html#autotoc_md6", null ]
+      [ "More information", "index.html#autotoc_md7", null ]
     ] ]
   ] ]
 ];

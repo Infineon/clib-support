@@ -42,6 +42,7 @@ typedef SemaphoreHandle_t cy_mutex_pool_semaphore_t;
 
 /** Map cy_mutex_pool_semaphore_t to ThreadX specific TX_MUTEX* */
 typedef TX_MUTEX* cy_mutex_pool_semaphore_t;
+
 #else // if defined(COMPONENT_FREERTOS)
 #error "Unhandled RTOS type"
 #endif // if defined(COMPONENT_FREERTOS)
