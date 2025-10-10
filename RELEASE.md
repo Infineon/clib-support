@@ -10,6 +10,8 @@ The CLib Support Library provides the necessary hooks to make C library function
 * Hook for the system time() function
 
 ### What Changed?
+#### v1.8.0
+* Documentation Update
 #### v1.7.0
 * Add support for LLVM ARM Compiler (FreeRTOS only)
 #### v1.6.0

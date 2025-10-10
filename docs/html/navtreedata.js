@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "(clib-support)", "index.html", [
+  [ "CLib Support", "index.html", [
     [ "CLib Support Library", "index.html", [
       [ "Overview", "index.html#autotoc_md1", null ],
       [ "FreeRTOS Requirements", "index.html#autotoc_md2", null ],

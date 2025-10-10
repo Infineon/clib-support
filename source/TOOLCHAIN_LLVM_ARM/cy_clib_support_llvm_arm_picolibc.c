@@ -1,5 +1,5 @@
 /***********************************************************************************************//**
- * \file cy_llvm_arm_picolibc.c
+ * \file cy_clib_support_llvm_arm_picolibc.c
  *
  * \brief
  * LLVM ARM C library port for picolibc

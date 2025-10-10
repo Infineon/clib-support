@@ -1,5 +1,5 @@
 /***********************************************************************************************//**
- * \file cy_llvm_arm_freertos.c
+ * \file cy_clib_support_llvm_arm_freertos.c
  *
  * \brief
  * LLVM ARM C library port for FreeRTOS
