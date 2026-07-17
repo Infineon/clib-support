@@ -25,16 +25,7 @@
 var NAVTREE =
 [
   [ "CLib Support", "index.html", [
-    [ "CLib Support Library", "index.html", [
-      [ "Overview", "index.html#autotoc_md1", null ],
-      [ "FreeRTOS Requirements", "index.html#autotoc_md2", null ],
-      [ "ThreadX Requirements", "index.html#autotoc_md3", null ],
-      [ "LLVM ARM Requirements", "index.html#autotoc_md4", null ],
-      [ "Features", "index.html#autotoc_md5", [
-        [ "Time Support Details", "index.html#autotoc_md6", null ]
-      ] ],
-      [ "More information", "index.html#autotoc_md7", null ]
-    ] ]
+    [ "CLib Support Library - Thread Safety Hooks for C Library Functions", "index.html", "index" ]
   ] ]
 ];
 
@@ -43,5 +34,6 @@ var NAVTREEINDEX =
 "index.html"
 ];
 
-var SYNCONMSG = 'click to disable panel synchronisation';
-var SYNCOFFMSG = 'click to enable panel synchronisation';
+var SYNCONMSG = 'click to disable panel synchronization';
+var SYNCOFFMSG = 'click to enable panel synchronization';
+var LISTOFALLMEMBERS = 'List of all members';

@@ -6,10 +6,8 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2018-2022 Cypress Semiconductor Corporation (an Infineon company) or
- * an affiliate of Cypress Semiconductor Corporation
- *
- * SPDX-License-Identifier: Apache-2.0
+ * (c) 2020-2026, Infineon Technologies AG, or an affiliate of Infineon
+ * Technologies AG.  SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,8 +66,8 @@ void cy_toolchain_init(void)
 }
 
 
-// XMC™ Lib already defines this so, don't redefine for those devices
-#if !defined(COMPONENT_CAT3)
+// Some devices already define this, so don't redefine for those devices
+#if (!defined(COMPONENT_CAT3)) && (!defined(CY_SBRK_DEFINED))
 //--------------------------------------------------------------------------------------------------
 // _sbrk
 //--------------------------------------------------------------------------------------------------
@@ -89,7 +87,7 @@ caddr_t _sbrk(int32_t incr)
 }
 
 
-#endif // if !defined(COMPONENT_CAT3)
+#endif // #if (!defined(COMPONENT_CAT3)) && (!defined(CY_SBRK_DEFINED))
 
 
 //--------------------------------------------------------------------------------------------------

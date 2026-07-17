@@ -10,6 +10,10 @@ The CLib Support Library provides the necessary hooks to make C library function
 * Hook for the system time() function
 
 ### What Changed?
+#### v1.9.0
+* Documentation Update
+* Extended supported device list for _sbrk
+* Improve RTC default epoch detection to use hardware-based conditions
 #### v1.8.0
 * Documentation Update
 #### v1.7.0
@@ -44,13 +48,13 @@ This version of the CLib FreeRTOS Support Library was validated for compatibilit
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox™ Software Environment        | 3.0.0   |
-| GCC Compiler                              | 10.3.1  |
-| IAR Compiler                              | 9.40.2  |
-| ARM Compiler                              | 6.16    |
-| LLVM ARM Compiler                             | 18.1.3  |
+| ModusToolbox™ Software Environment        | 3.8.0   |
+| GCC Compiler                              | 14.2.1  |
+| IAR Compiler                              | 9.70.2  |
+| ARM Compiler                              | 6.22    |
+| LLVM ARM Compiler                             | 19.1.5  |
 
-Minimum required ModusToolbox™ Software Environment: v2.0
+Minimum required ModusToolbox™ Software Environment: v3.6
 
 ### LLVM ARM Compiler and printf
 The LLVM ARM toolchain utilizes the picolibc library.
@@ -60,9 +64,10 @@ Because of the implementation in which picolibc handles printf calls, in the con
 ### More information
 Use the following links for more information, as needed:
 * [Reference Guide](https://infineon.github.io/clib-support/html/index.html)
-* [Cypress Semiconductor, an Infineon Technologies Company](http://www.cypress.com)
 * [Infineon GitHub](https://github.com/infineon)
-* [ModusToolbox™](https://www.cypress.com/products/modustoolbox-software-environment)
+* [ModusToolbox Software Environment, Quick Start Guide, Documentation, and Videos](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/)
 
 ---
-© Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation, 2020-2023.
+(c) 2020-2026, Infineon Technologies AG, or an affiliate of Infineon
+Technologies AG.  All rights reserved.
+

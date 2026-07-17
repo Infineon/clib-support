@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['placeholder_0',['placeholder',['../struct__reent.html#a46236a052fb2e7b488dc29c80d153fd5',1,'_reent']]],
-  ['ptr_1',['ptr',['../struct__reent.html#a6d4df0beb1a24c1ffe91e2de8e665003',1,'_reent']]]
+  ['c_20library_20functions_0',['CLib Support Library - Thread Safety Hooks for C Library Functions',['../index.html',1,'']]],
+  ['changelog_1',['Release Notes and Changelog',['../index.html#autotoc_md14',1,'']]],
+  ['clib_20support_20library_20thread_20safety_20hooks_20for_20c_20library_20functions_2',['CLib Support Library - Thread Safety Hooks for C Library Functions',['../index.html',1,'']]],
+  ['copyright_3',['Copyright',['../index.html#autotoc_md17',1,'']]]
 ];

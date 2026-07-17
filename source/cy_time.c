@@ -7,10 +7,8 @@
  *
  ***************************************************************************************************
  * \copyright
- * Copyright 2021-2022 Cypress Semiconductor Corporation (an Infineon company) or
- * an affiliate of Cypress Semiconductor Corporation
- *
- * SPDX-License-Identifier: Apache-2.0
+ * (c) 2020-2026, Infineon Technologies AG, or an affiliate of Infineon
+ * Technologies AG.  SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,9 +83,10 @@ time_t time(time_t* _timer)
 {
     cy_rslt_t result = CY_RSLT_SUCCESS;
     struct tm rtc_time;
-    #if defined(COMPONENT_CAT5)
-    /* For CAT5, default time is set as January 1, 2011 12:00:00 AM.
-       Epoch timestamp: 1293840000 */
+    #if (defined(COMPONENT_CM33) && !defined(CY_IP_M33SYSCPUSS))
+    /* CM33-based devices without PSoC-style SYSCPUSS have an RTC whose hardware
+       minimum supported year is 2010, so Unix epoch (1970) is not valid.
+       Default time is set to January 1, 2011 12:00:00 AM. Epoch timestamp: 1293840000 */
     time_t seconds = 1293840000;
     #else
     time_t seconds = 0;
